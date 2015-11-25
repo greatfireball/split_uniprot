@@ -36,6 +36,11 @@ while ( my $seq_object = $seqio_object->next_seq ) {
     foreach my $type (@types) {
         if ( test_by_string( $type, @classification ) ) {
             print "Valid for type: '$type'\n";
+	    # store the sequence in the subset
+	    foreach my $file (keys %{$filehandles{$type}})
+	    {
+		$filehandles{$type}{$file}->write_seq($seq_object);
+	    }
         }
         else {
             print "NOT Valid for type: '$type'\n";
