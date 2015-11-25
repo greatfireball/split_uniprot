@@ -5,7 +5,7 @@ use warnings;
 use Bio::SeqIO;
 
 my $file = shift;
-my $seqio_object = Bio::SeqIO->new( -file => $file, -format => 'swiss' );
+my $seqio_object = Bio::SeqIO->new( -file => "<".$file, -format => 'swiss' );
 
 my @types =
   qw(bacteria archaea viruses eukaryota_not_metazoa eukaryota_and_metazoa);
@@ -15,10 +15,10 @@ my %filehandles = ();
 foreach my $type (@types) {
     my $fasta_file_name = $type . ".fasta";
     $filehandles{$fasta_file_name} =
-      Bio::SeqIO->new( -file => $fasta_file_name, -format => "fasta" );
+      Bio::SeqIO->new( -file => ">".$fasta_file_name, -format => "fasta" );
     my $sp_file_name = $type . ".sp";
     $filehandles{$sp_file_name} =
-      Bio::SeqIO->new( -file => $sp_file_name, -format => "swiss" );
+      Bio::SeqIO->new( -file => ">".$sp_file_name, -format => "swiss" );
 }
 
 # go through all sequences
