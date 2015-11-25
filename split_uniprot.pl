@@ -5,12 +5,20 @@ use warnings;
 use Bio::SeqIO;
 use IO::Uncompress::Gunzip qw($GunzipError);
 
+use Term::ProgressBar 2.00;
 
 my $file = shift;
 my $z = new IO::Uncompress::Gunzip $file
     or die "gunzip failed: $GunzipError\n";
 
 my $filesize = 169981337736;
+
+my $progress = Term::ProgressBar->new({name  => 'Reading',
+                                         count => $filesize,
+                                         ETA   => 'linear', });
+
+$progress->max_update_rate(1);
+my $next_update = 0;
 
 my $num_datasets = 0;
 
@@ -37,9 +45,12 @@ while ( my $seq_object = $seqio_object->next_seq ) {
 
     $num_datasets++;
 
+    $next_update = $progress->update($z->tell())
+	if $z->tell() > $next_update;
+
     if ($num_datasets%100000 == 0)
     {
-	sprintf "Number of data sets %d\n", $num_datasets;
+	$progress->message(sprintf "Number of data sets %d", $num_datasets);
     }
 
     # first check if the keyword "Complete proteome" is present
@@ -66,6 +77,9 @@ while ( my $seq_object = $seqio_object->next_seq ) {
         }
     }
 }
+
+$progress->update($filesize)
+    if $filesize >= $next_update;
 
 sub test_by_string {
     my ( $type, @classification ) = @_;
