@@ -8,7 +8,7 @@ my $file = shift;
 my $seqio_object = Bio::SeqIO->new( -file => $file, -format => 'swiss' );
 
 my @types =
-  qw(bacteria archae viruses eukaryota_not_metazoa eukaryote_and_metazoa);
+  qw(bacteria archae viruses eukaryota_not_metazoa eukaryota_and_metazoa);
 
 my %filehandles = ();
 
