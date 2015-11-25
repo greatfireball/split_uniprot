@@ -3,9 +3,18 @@ use strict;
 use warnings;
 
 use Bio::SeqIO;
+use IO::Uncompress::Gunzip qw($GunzipError);
+
 
 my $file = shift;
-my $seqio_object = Bio::SeqIO->new( -file => "<" . $file, -format => 'swiss' );
+my $z = new IO::Uncompress::Gunzip $file
+    or die "gunzip failed: $GunzipError\n";
+
+my $filesize = 169981337736;
+
+my $num_datasets = 0;
+
+my $seqio_object = Bio::SeqIO->new( -fh => $z, -format => 'swiss' );
 
 my @types =
   qw(bacteria archaea viruses eukaryota_not_metazoa eukaryota_and_metazoa);
@@ -26,16 +35,26 @@ foreach my $type (@types) {
 # go through all sequences
 while ( my $seq_object = $seqio_object->next_seq ) {
 
+    $num_datasets++;
+
+    if ($num_datasets%100000 == 0)
+    {
+	sprintf "Number of data sets %d\n", $num_datasets;
+    }
+
     # first check if the keyword "Complete proteome" is present
-    next
-      unless ( grep { $_ =~ /Complete proteome/i }
-        $seq_object->get_keywords() );
+    unless ( grep { $_ =~ /Complete proteome/i }
+        $seq_object->get_keywords() )
+    {
+#	print "Skipping entry ".$z->tell()."\n";
+	next;
+    }
 
     my @classification = $seq_object->species()->classification();
 
     foreach my $type (@types) {
         if ( test_by_string( $type, @classification ) ) {
-            print "Valid for type: '$type'\n";
+ #           print "Valid for type: '$type'\n";
 	    # store the sequence in the subset
 	    foreach my $file (keys %{$filehandles{$type}})
 	    {
@@ -43,7 +62,7 @@ while ( my $seq_object = $seqio_object->next_seq ) {
 	    }
         }
         else {
-            print "NOT Valid for type: '$type'\n";
+#            print "NOT Valid for type: '$type'\n";
         }
     }
 }
