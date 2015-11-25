@@ -29,6 +29,15 @@ while ( my $seq_object = $seqio_object->next_seq ) {
 
     my @classification = $seq_object->species()->classification();
 
+    foreach my $type (@types)
+    {
+	if (test_by_string($type, @classification))
+	{
+	    print "Valid for type: '$type'\n";
+	} else {
+	    print "NOT Valid for type: '$type'\n";
+	}
+    }
 }
 
 sub test_by_string
