@@ -13,12 +13,14 @@ my @types =
 my %filehandles = ();
 
 foreach my $type (@types) {
-    my $fasta_file_name = $type . ".fasta";
-    $filehandles{$fasta_file_name} =
-      Bio::SeqIO->new( -file => ">".$fasta_file_name, -format => "fasta" );
-    my $sp_file_name = $type . ".sp";
-    $filehandles{$sp_file_name} =
-      Bio::SeqIO->new( -file => ">".$sp_file_name, -format => "swiss" );
+    $filehandles{$type} = {
+        fasta => Bio::SeqIO->new(
+            -file   => ">" . $type . ".fasta",
+            -format => "fasta"
+        ),
+        swiss =>
+          Bio::SeqIO->new( -file => ">" . $type . ".sp", -format => "swiss" )
+    };
 }
 
 # go through all sequences
