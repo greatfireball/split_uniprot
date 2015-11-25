@@ -8,14 +8,18 @@ use IO::Uncompress::Gunzip qw($GunzipError);
 use Term::ProgressBar 2.00;
 
 my $file = shift;
-my $z = new IO::Uncompress::Gunzip $file
-    or die "gunzip failed: $GunzipError\n";
+my $z    = new IO::Uncompress::Gunzip $file
+  or die "gunzip failed: $GunzipError\n";
 
 my $filesize = 169981337736;
 
-my $progress = Term::ProgressBar->new({name  => 'Reading',
-                                         count => $filesize,
-                                         ETA   => 'linear', });
+my $progress = Term::ProgressBar->new(
+    {
+        name  => 'Reading',
+        count => $filesize,
+        ETA   => 'linear',
+    }
+);
 
 $progress->max_update_rate(1);
 my $next_update = 0;
@@ -45,41 +49,39 @@ while ( my $seq_object = $seqio_object->next_seq ) {
 
     $num_datasets++;
 
-    $next_update = $progress->update($z->tell())
-	if $z->tell() > $next_update;
+    $next_update = $progress->update( $z->tell() )
+      if $z->tell() > $next_update;
 
-    if ($num_datasets%100000 == 0)
-    {
-	$progress->message(sprintf "Number of data sets %d", $num_datasets);
+    if ( $num_datasets % 100000 == 0 ) {
+        $progress->message( sprintf "Number of data sets %d", $num_datasets );
     }
 
     # first check if the keyword "Complete proteome" is present
-    unless ( grep { $_ =~ /Complete proteome/i }
-        $seq_object->get_keywords() )
-    {
-#	print "Skipping entry ".$z->tell()."\n";
-	next;
+    unless ( grep { $_ =~ /Complete proteome/i } $seq_object->get_keywords() ) {
+
+        #	print "Skipping entry ".$z->tell()."\n";
+        next;
     }
 
     my @classification = $seq_object->species()->classification();
 
     foreach my $type (@types) {
         if ( test_by_string( $type, @classification ) ) {
- #           print "Valid for type: '$type'\n";
-	    # store the sequence in the subset
-	    foreach my $file (keys %{$filehandles{$type}})
-	    {
-		$filehandles{$type}{$file}->write_seq($seq_object);
-	    }
+
+            #           print "Valid for type: '$type'\n";
+            # store the sequence in the subset
+            foreach my $file ( keys %{ $filehandles{$type} } ) {
+                $filehandles{$type}{$file}->write_seq($seq_object);
+            }
         }
         else {
-#            print "NOT Valid for type: '$type'\n";
+            #            print "NOT Valid for type: '$type'\n";
         }
     }
 }
 
 $progress->update($filesize)
-    if $filesize >= $next_update;
+  if $filesize >= $next_update;
 
 sub test_by_string {
     my ( $type, @classification ) = @_;
