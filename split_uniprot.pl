@@ -28,4 +28,39 @@ while ( my $seq_object = $seqio_object->next_seq ) {
     next unless (grep {$_ =~ /Complete proteome/i} $seq_object->get_keywords());
 
     my @classification = $seq_object->species()->classification();
+
+}
+
+sub test_by_string
+{
+    my ($type, @classification) = @_;
+
+    # test if type contains an not_.+
+    my @not_allowed = $type =~ s/(_?not_[^_]+)//g;
+
+    # all and can be deleted
+    $type =~ s/and_//g;
+
+    # the rest of the items are required
+    my @required = split(/_+/, $type);
+
+    # prepare hashs for faster access
+    my %req;
+    my %forbidden;
+    @req{@required} = map { 0 } (@required);
+    @forbidden{@not_allowed} = map { 0 } (@not_allowed);
+
+    # got though the classification and increase the hash values
+    foreach my $item (@classification)
+    {
+	$item = lc($item);
+	$forbidden{$item}++ if (exists $forbidden{$item});
+	$req{$item}++ if (exists $req{$item});
+    }
+
+    # check that no forbidden item was marked as present
+    return undef if (grep {$forbidden{$_} > 0} (keys %forbidden));
+
+    # and return true if all required items are marked as present
+    return 1 if ((grep {$req{$_} > 0} (keys %req))==(keys %req));
 }
