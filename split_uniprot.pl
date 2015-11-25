@@ -23,7 +23,9 @@ foreach my $type (@types) {
 
 # go through all sequences
 while ( my $seq_object = $seqio_object->next_seq ) {
-    print join( ";", $seq_object->get_keywords() ), "\n";
+
+    # first check if the keyword "Complete proteome" is present
+    next unless (grep {$_ =~ /Complete proteome/i} $seq_object->get_keywords());
 
     my @classification = $seq_object->species()->classification();
 }
